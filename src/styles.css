@@ -1,7 +1,12 @@
 /* You can add global styles to this file, and also import other style files */
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+html, body { 
+    height: 100%; 
+}
+body { 
+    margin: 0; 
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+}
 
 /* Icons APP  */
 .app__icon {
@@ -22,9 +27,25 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 }
 
 .menu__logo {
+    flex: 1;
+    flex-direction: row;
+    justify-content: space-between;
     align-items: center;
 }
 
 .menu__logo-img {
     height: 35px;
+}
+
+/* Form APP  */
+
+.dialog__items {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.dialog__form .mat-form-field{
+    width: 100%;
 }
