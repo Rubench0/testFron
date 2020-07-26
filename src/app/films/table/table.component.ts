@@ -1,10 +1,13 @@
 import { Component, OnInit, ViewChild, Inject } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatSort } from '@angular/material/sort';
-import { Film } from 'src/app/interfaces/film';
+import { Film, FilmInterface } from 'src/app/interfaces/film';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
-
-const ELEMENT_DATA: Film[] = [{id: 1, name: 'Hydrogen', date: '', status: 'H', option : 1}];
+import { FirestoreService } from 'src/app/services/firestore.service';
+import { FormBuilder, Validators, FormGroup } from '@angular/forms';
+import * as moment from 'moment';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { SnackComponent } from 'src/app/layout/snack/snack.component';
 
 
 @Component({
@@ -14,22 +17,35 @@ const ELEMENT_DATA: Film[] = [{id: 1, name: 'Hydrogen', date: '', status: 'H', o
 })
 
 export class TableComponent implements OnInit {
-  displayedColumns: string[] = ['id', 'name', 'date', 'status', 'option'];
-  dataSource = new MatTableDataSource(ELEMENT_DATA);
+  public displayedColumns: string[] = ['id', 'name', 'date', 'status', 'option'];
+  public dataSource;
+  public data: any[] = [];
 
   @ViewChild(MatSort, {static: true}) sort: MatSort;
 
   constructor(
-    public dialog: MatDialog
-  ) { }
+	public dialog: MatDialog,
+	private _firestoreService: FirestoreService,
+  ) { 
+	this._firestoreService.getFilms().subscribe(
+		response => {
+			response.forEach(item => {
+				let data = item.payload.doc.data() as Film;
+				this.data.push({ ...data, id : item.payload.doc.id, option : item.payload.doc.id});
+			})
+			this.dataSource = new MatTableDataSource<FilmInterface>(this.data);
+		}
+	)
+  }
 
   ngOnInit(): void {
     this.dataSource.sort = this.sort;
   }
 
-  openDialogEdit(): void {
+  openDialogEdit(element): void {
 		const dialogRef = this.dialog.open(DialogFormEditFilm, {
 			width: '50%',
+			data: element
 		});
 		
 		dialogRef.afterClosed().subscribe(result => {
@@ -37,9 +53,10 @@ export class TableComponent implements OnInit {
 		});
   }
   
-  openDialogDelete(): void {
+  openDialogDelete(element): void {
 		const dialogRef = this.dialog.open(DialogFormDeleteFilm, {
 			width: '250px',
+			data: element
 		});
 		
 		dialogRef.afterClosed().subscribe(result => {
@@ -51,15 +68,54 @@ export class TableComponent implements OnInit {
 
 @Component({
 	selector: 'dialog-form-edit-film',
-	templateUrl: '../../layout/dialog/dialog-edit.html',
+	templateUrl: '../../layout/dialog/dialog-form.html',
 })
-export class DialogFormEditFilm {
+export class DialogFormEditFilm implements OnInit {
+	public formFilm: FormGroup;
+	public film: Film;
+
   constructor(
 		public dialogRef: MatDialogRef<DialogFormEditFilm>,
-		@Inject(MAT_DIALOG_DATA) public data: Film
-	) {}
+		@Inject(MAT_DIALOG_DATA) public data: Film,
+		private formBuilder: FormBuilder,
+		private _firestoreService: FirestoreService,
+		private _snackBar: MatSnackBar
+	) {
+		this.film = new Film('','','','','');
+
+	}
 	
-	onNoClick(): void {
+	ngOnInit() {
+		this.formFilm = this.formBuilder.group({
+			inputName: [
+			  this.data.name, [
+				Validators.required,
+				Validators.pattern('^[ñA-Za-z _]*[ñA-Za-z][ñA-Za-z _]*$')
+			]
+			],
+			inputDate: [
+				'', [Validators.required]
+			],
+			inputStatus: [
+				this.data.status, [Validators.required]
+			]
+		});
+	}
+
+	submit() {
+		this.film.name = this.formFilm.value.inputName;
+		this.film.date = this.formFilm.value.inputDate;
+		this.film.status = this.formFilm.value.inputStatus;
+		this._firestoreService.updateFilms(this.data.id, this.film).then((response) => {
+			this.dialogRef.close();
+			this._snackBar.openFromComponent(SnackComponent, {
+				duration: 3 * 1000,
+				data: {msg: 'Registro editado'}
+			});
+		});
+	}
+
+	closeDialog(): void {
 		this.dialogRef.close();
 	}
 }
@@ -71,10 +127,22 @@ export class DialogFormEditFilm {
 export class DialogFormDeleteFilm {
   constructor(
 		public dialogRef: MatDialogRef<DialogFormDeleteFilm>,
-		@Inject(MAT_DIALOG_DATA) public data: Film
+		@Inject(MAT_DIALOG_DATA) public data: Film,
+		private _firestoreService: FirestoreService,
+		private _snackBar: MatSnackBar
 	) {}
 	
-	onNoClick(): void {
+	submit() {
+		this._firestoreService.deleteFilms(this.data.id).then((response) => {
+			this.dialogRef.close();
+			this._snackBar.openFromComponent(SnackComponent, {
+				duration: 3 * 1000,
+				data: {msg: 'Registro eliminado'}
+			});
+		});
+	}
+
+	closeDialog(): void {
 		this.dialogRef.close();
 	}
 }

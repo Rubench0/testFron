@@ -3,6 +3,6 @@
     <p>¿Confirma que quiere eliminar este registro?</p>
 </div>
 <div mat-dialog-actions align="center">
-    <button mat-button ><mat-icon>close</mat-icon> No</button>
-    <button mat-raised-button color="warn" ><mat-icon>delete</mat-icon>  Si</button>
+    <button mat-button (click)="closeDialog()" ><mat-icon>close</mat-icon> No</button>
+    <button mat-raised-button color="warn" (click)="submit()" ><mat-icon>delete</mat-icon>  Si</button>
 </div>

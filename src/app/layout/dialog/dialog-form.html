@@ -1,0 +1,31 @@
+<div class="dialog__form" >
+    <form [formGroup]="formFilm"  >
+        <h1 mat-dialog-title>Nueva película</h1>
+        <div mat-dialog-content>
+            <div class="dialog__items">
+                <mat-form-field appearance="outline">
+                    <mat-label>Nombre</mat-label>
+                    <input matInput name="name" formControlName="inputName" required  autofocus  >
+                </mat-form-field>
+                <mat-form-field appearance="outline" >
+                    <mat-label>Fecha de publicación</mat-label>
+                    <input matInput [matDatepicker]="picker" name="date" formControlName="inputDate" >
+                    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                    <mat-datepicker #picker></mat-datepicker>
+                </mat-form-field>
+                <mat-form-field appearance="outline"  >
+                    <mat-label>Estado</mat-label>
+                    <select matNativeControl required name="status" formControlName="inputStatus" >
+                        <option value="1">Inactivo</option>
+                        <option value="2">Activo</option>
+                    </select>
+                </mat-form-field>
+            </div>
+        </div>
+        <div mat-dialog-actions class="dialog__buttons" align="center" >
+            <button mat-button (click)="closeDialog()" ><mat-icon>close</mat-icon> ClOSE</button>
+            <button mat-raised-button color="primary" (click)="submit()" ><mat-icon>save</mat-icon>  SAVE</button>
+        </div>
+    </form>
+</div>
+<ngx-spinner name="three" [fullScreen]="false" type="ball-clip-rotate" size="medium" bdColor="rgba(255,255,255,0.7)" color="rgba(255,153,0,1)" style="z-index: 99996;"  ></ngx-spinner>
