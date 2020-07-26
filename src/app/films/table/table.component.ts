@@ -20,36 +20,27 @@ export class TableComponent implements OnInit {
   public displayedColumns: string[] = ['id', 'name', 'date', 'status', 'option'];
   public dataSource;
   public data: any[] = [];
-
-  @ViewChild(MatSort, {static: true}) sort: MatSort;
+  @ViewChild(MatSort) sort: MatSort;
 
   constructor(
 	public dialog: MatDialog,
 	private _firestoreService: FirestoreService,
   ) { 
-	this._firestoreService.getFilms().subscribe(
-		response => {
-			response.forEach(item => {
-				let data = item.payload.doc.data() as Film;
-				this.data.push({ ...data, id : item.payload.doc.id, option : item.payload.doc.id});
-			})
-			this.dataSource = new MatTableDataSource<FilmInterface>(this.data);
+	this.updateTable();
+	this._firestoreService.getMessage().subscribe(message => {
+		if (message) {
+			this.updateTable();
 		}
-	)
+	  });
   }
 
   ngOnInit(): void {
-    this.dataSource.sort = this.sort;
   }
 
   openDialogEdit(element): void {
 		const dialogRef = this.dialog.open(DialogFormEditFilm, {
 			width: '50%',
 			data: element
-		});
-		
-		dialogRef.afterClosed().subscribe(result => {
-			console.log('The dialog was closed');
 		});
   }
   
@@ -58,12 +49,28 @@ export class TableComponent implements OnInit {
 			width: '250px',
 			data: element
 		});
-		
-		dialogRef.afterClosed().subscribe(result => {
-			console.log('The dialog was closed');
-		});
 	}
 
+
+	updateTable() {
+		this.dataSource = new MatTableDataSource<FilmInterface>();
+		this._firestoreService.getFilms().subscribe(
+			response => {
+				if (response.length != 0) {
+					response.forEach(item => {
+						let data = item.payload.doc.data() as Film;
+						this.data.push({ ...data, id : item.payload.doc.id, option : item.payload.doc.id});
+					})
+					this.dataSource = new MatTableDataSource<FilmInterface>(this.data);
+				} else {
+					const NotResult: FilmInterface[] = [{id: '', name: '', date: 'Sin registros', status: null, option: null}
+				];
+				this.dataSource = new MatTableDataSource<FilmInterface>(NotResult);
+				}
+				this.dataSource.sort = this.sort;
+			}
+		)
+	}
 }
 
 @Component({
@@ -107,6 +114,7 @@ export class DialogFormEditFilm implements OnInit {
 		this.film.date = this.formFilm.value.inputDate;
 		this.film.status = this.formFilm.value.inputStatus;
 		this._firestoreService.updateFilms(this.data.id, this.film).then((response) => {
+			this._firestoreService.sendMessage(true);
 			this.dialogRef.close();
 			this._snackBar.openFromComponent(SnackComponent, {
 				duration: 3 * 1000,
@@ -134,6 +142,7 @@ export class DialogFormDeleteFilm {
 	
 	submit() {
 		this._firestoreService.deleteFilms(this.data.id).then((response) => {
+			this._firestoreService.sendMessage(true);
 			this.dialogRef.close();
 			this._snackBar.openFromComponent(SnackComponent, {
 				duration: 3 * 1000,

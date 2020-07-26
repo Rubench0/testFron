@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { AngularFirestore, AngularFirestoreDocument } from '@angular/fire/firestore';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FirestoreService {
+  private subject = new Subject<any>();
 
   constructor(
     private firestore: AngularFirestore
@@ -29,5 +30,13 @@ export class FirestoreService {
 
   public deleteFilms(documentId: string) {
     return this.firestore.collection('films').doc(documentId).delete();
+  }
+
+  sendMessage(message: any) {
+    this.subject.next(message);
+  }
+
+  getMessage(): Observable<any> {
+    return this.subject.asObservable();
   }
 }

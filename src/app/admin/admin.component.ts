@@ -34,10 +34,6 @@ export class AdminComponent implements OnInit {
 			width: '50%',
 			data: {index: this.index}
 		});
-		
-		dialogRef.afterClosed().subscribe(result => {
-			console.log('The dialog was closed');
-		});
 	}
 }
 
